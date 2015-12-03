@@ -14,6 +14,16 @@ import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
 
+import java.util.ArrayList;
+
+import mettinochmette.myapplication.data.api.ApiManager;
+import mettinochmette.myapplication.model.ParkingPlace;
+import mettinochmette.myapplication.model.ParkingProperty;
+import mettinochmette.myapplication.model.Place;
+import retrofit.Callback;
+import retrofit.Response;
+import retrofit.Retrofit;
+
 /**
  * A simple {@link Fragment} subclass.
  */
@@ -45,19 +55,48 @@ public class CityChooserFragment extends Fragment {
         Button buttonMalmo = (Button)view.findViewById(R.id.button_malmo);
         final CheckBox checkboxRemember = (CheckBox) view.findViewById(R.id.remember_checkbox);
 
+//        ApiManager.getApi().getServiceTimeByDay("weekday", "måndag").flatMap(place1 -> Observable.from(place1.getParkingPlaces()))
+//                .map(ParkingPlace::getProperties)
+//                .filter(parkingProperty -> parkingProperty.getParkingDistrict().equalsIgnoreCase("Södermalm"))
+//                .take(10)
+//                .subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread()).subscribe(
+//                    property -> Log.i(TAG, "Place is:  " + property.toString())
+//                    ,throwable -> Log.i(TAG, throwable.getMessage()));
+        
+        ApiManager.getApi().getServiceTimeByDay("weekday", "måndag").enqueue(new Callback<Place>() {
+            @Override
+            public void onResponse(Response<Place> response, Retrofit retrofit) {
+                ArrayList<ParkingPlace> mParkingPlaces = response.body().getParkingPlaces();
+                for (ParkingPlace parkPlace : mParkingPlaces) {
+                    ParkingProperty prop = parkPlace.getProperties();
+                    Log.i(TAG, "Place is: " + prop.toString());
+                }
+            }
+
+            @Override
+            public void onFailure(Throwable t) {
+                Log.i(TAG, t.getMessage());
+            }
+        });
+
+
+
+//        ApiManager.getApi().getServiceTimeByDay("area", "Södermalm").flatMap(place1 -> Observable.from(place1.getParkingPlaces())).map(ParkingPlace::getProperties).subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread()).subscribe(
+//                property -> Log.i(TAG, "Place is:  " + property.toString())
+//                ,throwable -> Log.i(TAG, throwable.getMessage()));
+
         buttonStockholm.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 onCitySelectedListener.onCitySelected(2);
-                Log.i(TAG,"du är en slyna");
-                if (checkboxRemember.isChecked()){
-                    sharedPreferences = getActivity().getSharedPreferences("PBuddy_Storage", Context.MODE_PRIVATE);
+                Log.i(TAG, "du är en slyna");
+                if (checkboxRemember.isChecked()) {
+                    sharedPreferences = CityChooserFragment.this.getActivity().getSharedPreferences("PBuddy_Storage", Context.MODE_PRIVATE);
                     editor = sharedPreferences.edit();
-                    editor.putBoolean("PBuddy_SavedPreferences",checkboxRemember.isChecked());
+                    editor.putBoolean("PBuddy_SavedPreferences", checkboxRemember.isChecked());
                     editor.commit();
                 }
             }
-
         });
 
         buttonGoteborg.setOnClickListener(new View.OnClickListener() {

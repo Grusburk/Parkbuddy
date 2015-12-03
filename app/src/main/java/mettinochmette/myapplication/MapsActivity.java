@@ -9,7 +9,6 @@ import android.location.Criteria;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
-import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.v4.app.ActivityCompat;
@@ -64,7 +63,6 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
 //        getSupportActionBar().setTitle((Html.fromHtml("<font color=\"#FFFFFF\">" + getString(R.string.app_name) + "</font>")));
         sharedPreferences = getSharedPreferences("PBuddy_Storage", Context.MODE_PRIVATE);
         remember = sharedPreferences.getBoolean("PBuddy_SavedPreferences", true);
-        new PostTask().execute("http://openparking.stockholm.se/LTF-Tolken/v1/servicedagar/weekday/måndag?outputFormat=json&apiKey=0d49d540-8c75-4a01-b8c7-ad221c4708ba");
 
 //        http://openparking.stockholm.se/LTF-Tolken/v1/ptillaten/all?apiKey=0d49d540-8c75-4a01-b8c7-ad221c4708ba
 
@@ -194,44 +192,5 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                 .beginTransaction().replace(R.id.map,mapFragment).commit();
         mapFragment.getMapAsync(this);
 
-    }
-
-    // The definition of our task class
-    private class PostTask extends AsyncTask<String, Integer, String> {
-        @Override
-        protected void onPreExecute() {
-            super.onPreExecute();
-//            displayProgressBar("Downloading...");
-        }
-
-        @Override
-        protected String doInBackground(String... params) {
-            String url=params[0];
-
-            // Dummy code
-            for (int i = 0; i <= 100; i += 5) {
-                try {
-                    Thread.sleep(50);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-                publishProgress(i);
-            }
-            return "All Done!";
-        }
-
-        @Override
-        protected void onProgressUpdate(Integer... values) {
-            super.onProgressUpdate(values);
-//            updateProgressBar(values[0]);
-        }
-
-        @Override
-        protected void onPostExecute(String result) {
-            super.onPostExecute(result);
-            Log.i(TAG, "hej");
-            Log.i(TAG, "Result is: " + result);
-//            dismissProgressBar();
-        }
     }
 }
