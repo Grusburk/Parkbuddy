@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical" android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/colorPrimary">
+
+
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_marginTop="15dp"
+        android:layout_marginBottom="15dp"
+        android:layout_height="wrap_content"
+        android:textColor="@android:color/white"
+        android:text="@string/city_chooser_text"
+        android:textAlignment="center"
+        android:textSize="20sp"/>
+
+    <ImageView
+        android:layout_marginBottom="15dp"
+        android:layout_marginLeft="5dp"
+        android:layout_gravity="center_horizontal"
+        android:background="@drawable/parkbuddy"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content" />
+
+    <!--Malmö-->
+    <Button
+        android:layout_marginBottom="15dp"
+        android:textColor="@android:color/white"
+        android:textSize="18sp"
+        android:text="Malmö"
+        android:background="@drawable/ripple"
+        android:layout_gravity="center_horizontal"
+        android:layout_width="225dp"
+        android:layout_height="wrap_content"
+        android:id="@+id/button_malmo"
+        />
+
+    <!--Göteborg-->
+    <Button
+        android:layout_marginBottom="15dp"
+        android:textColor="@android:color/white"
+        android:textSize="18sp"
+        android:text="Göteborg"
+        android:background="@drawable/ripple"
+        android:layout_gravity="center_horizontal"
+        android:layout_width="225dp"
+        android:layout_height="wrap_content"
+        android:id="@+id/button_goteborg"/>
+
+
+    <!--Stockholm-->
+    <Button
+        android:layout_marginBottom="15dp"
+        android:textColor="@android:color/white"
+        android:textSize="18sp"
+        android:text="Stockholm"
+        android:background="@drawable/ripple"
+        android:layout_gravity="center_horizontal"
+        android:layout_width="225dp"
+        android:layout_height="wrap_content"
+        android:id="@+id/button_stockholm"/>
+
+    <CheckBox
+        android:checked="true"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginTop="40dp"
+        android:textColor="@android:color/white"
+        android:textSize="20sp"
+        android:text="Kom ihåg mitt val"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/remember_checkbox"/>
+
+</LinearLayout>

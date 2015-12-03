@@ -1,0 +1,10 @@
+<resources>
+    <string name="app_name">ParkBuddy</string>
+    <string name="title_activity_maps">ParkBuddy</string>
+    <string name="city_chooser_text">Välkommen till ParkBuddy! \n Välj vilken stad du vill hitta parkering i!</string>
+
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="drawer_open">Open navigation drawer</string>
+    <string name="drawer_close">Close navigation drawer</string>
+    <string name="hello_blank_fragment">Hello blank fragment</string>
+</resources>
