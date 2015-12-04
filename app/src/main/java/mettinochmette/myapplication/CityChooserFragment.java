@@ -62,22 +62,6 @@ public class CityChooserFragment extends Fragment {
 //                .subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread()).subscribe(
 //                    property -> Log.i(TAG, "Place is:  " + property.toString())
 //                    ,throwable -> Log.i(TAG, throwable.getMessage()));
-        
-        ApiManager.getApi().getServiceTimeByDay("weekday", "måndag").enqueue(new Callback<Place>() {
-            @Override
-            public void onResponse(Response<Place> response, Retrofit retrofit) {
-                ArrayList<ParkingPlace> mParkingPlaces = response.body().getParkingPlaces();
-                for (ParkingPlace parkPlace : mParkingPlaces) {
-                    ParkingProperty prop = parkPlace.getProperties();
-                    Log.i(TAG, "Place is: " + prop.toString());
-                }
-            }
-
-            @Override
-            public void onFailure(Throwable t) {
-                Log.i(TAG, t.getMessage());
-            }
-        });
 
 
 

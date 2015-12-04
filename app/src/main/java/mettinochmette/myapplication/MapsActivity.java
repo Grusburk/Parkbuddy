@@ -9,6 +9,7 @@ import android.location.Criteria;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
+import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.v4.app.ActivityCompat;
@@ -23,6 +24,7 @@ import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
+import android.widget.TextView;
 
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
@@ -30,8 +32,19 @@ import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
+import com.google.android.gms.maps.model.MarkerOptions;
 
-public class MapsActivity extends AppCompatActivity implements OnMapReadyCallback, LocationListener, CityChooserFragment.OnCitySelectedListener {
+import java.util.ArrayList;
+
+import mettinochmette.myapplication.data.api.ApiManager;
+import mettinochmette.myapplication.model.Geometry;
+import mettinochmette.myapplication.model.ParkingPlace;
+import mettinochmette.myapplication.model.Place;
+import retrofit.Callback;
+import retrofit.Response;
+import retrofit.Retrofit;
+
+public class MapsActivity extends AppCompatActivity implements OnMapReadyCallback, LocationListener, GoogleMap.InfoWindowAdapter,CityChooserFragment.OnCitySelectedListener {
 
     private GoogleMap mMap;
     private Toolbar toolbar;
@@ -47,6 +60,8 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     private ActionBarDrawerToggle mDrawerToggle;
     private DrawerLayout mDrawerLayout;
     private String mActivityTitle;
+    private ArrayList<LatLng> locations;
+    private ArrayList<String> mStreetNames;
 
     @TargetApi(Build.VERSION_CODES.LOLLIPOP)
     @Override
@@ -151,6 +166,50 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
             locationManager.requestLocationUpdates(provider, 500L, 1f, this);
 
         }
+        ApiManager.getApi().getServiceTimeByDay("weekday", "måndag").enqueue(new Callback<Place>() {
+            @Override
+            public void onResponse(Response<Place> response, Retrofit retrofit) {
+                locations = new ArrayList<LatLng>();
+                final ArrayList<ParkingPlace> mParkingPlaces = response.body().getParkingPlaces();
+                mStreetNames = new ArrayList<String>();
+                AsyncTask.execute(new Runnable() {
+                    @Override
+                    public void run() {
+                        for (ParkingPlace parkPlace : mParkingPlaces) {
+                            mStreetNames.add(parkPlace.getProperties().getStreetName());
+                            Geometry geotag = parkPlace.getGeometry();
+                            for (ArrayList<Float> cordinates : geotag.getCoordinates()) {
+                                locations.add(new LatLng(cordinates.get(1), cordinates.get(0)));
+                            }
+                        }
+//                        for (ParkingPlace parkProperties : mParkingPlaces){
+//                            ParkingProperty mParkingproperties = parkProperties.getProperties();
+//                            for (ArrayList<String> mStreetNames : mParkingproperties.getStreetName(){
+//                                mStreetNames.add(mParkingproperties.getStreetName());
+//                            }
+//                        }
+
+                        runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                for (int i = 0; i < mStreetNames.size(); i++) {
+                                    mMap.addMarker(new MarkerOptions()
+                                                    .position(locations.get(i))
+                                                    .title(mStreetNames.get(i))
+                                    );
+                                }
+
+                            }
+                        });
+                    }
+                });
+            }
+
+            @Override
+            public void onFailure(Throwable t) {
+                Log.i(TAG, t.getMessage());
+            }
+        });
     }
 
     @Override
@@ -165,7 +224,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     @Override
     public void onLocationChanged(Location location) {
         LatLng myLocation = new LatLng(location.getLatitude(),location.getLongitude());
-        mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(myLocation,15));
+        mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(myLocation,25));
         Log.i(TAG, myLocation.latitude + "");
 
     }
@@ -192,5 +251,16 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                 .beginTransaction().replace(R.id.map,mapFragment).commit();
         mapFragment.getMapAsync(this);
 
+    }
+
+    @Override
+    public View getInfoWindow(Marker marker) {
+        return null;
+    }
+
+    @Override
+    public View getInfoContents(Marker marker) {
+        View popUp =
+        return null;
     }
 }
