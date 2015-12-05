@@ -1,13 +1,51 @@
 <?xml version="1.0" encoding="utf-8"?>
-    <TextView
-        xmlns:android="http://schemas.android.com/apk/res/android"
-        android:layout_width="match_parent"
+
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_height="wrap_content"
+    android:layout_width="wrap_content"
+    android:background="@android:color/transparent">
+
+    <RelativeLayout
+        xmlns:tools="http://schemas.android.com/tools"
+        android:layout_margin="10dp"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:background="@color/colorPrimary"
-        android:textColor="@android:color/white"
-        android:drawableLeft="@drawable/parkbuddy"
-        android:text="
-        Gata:           blablal
-        Starttid       blalbasd
-        Sluttid         blalbla"
-        android:textSize="20sp"/>
+        android:background="@color/colorPrimary">
+
+        <ImageView
+            android:id="@+id/image"
+            android:layout_height="wrap_content"
+            android:layout_width="wrap_content"
+            android:background="@drawable/parkbuddy"/>
+        <TextView
+            android:layout_margin="5dp"
+            android:id="@+id/street_text"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textColor="@android:color/white"
+            android:layout_toRightOf="@+id/image"
+            tools:text="@string/street_name_annotation"
+            android:maxLines="1"
+            android:textSize="15sp" />
+        <TextView
+            android:id="@+id/start_time_text"
+            android:layout_margin="5dp"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textColor="@android:color/white"
+            android:layout_toRightOf="@+id/image"
+            android:layout_below="@id/street_text"
+            tools:text="@string/start_time_name_annotation"
+            android:textSize="15sp" />
+        <TextView
+            android:layout_margin="5dp"
+            android:id="@+id/end_time_text"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textColor="@android:color/white"
+            android:layout_toRightOf="@+id/image"
+            android:layout_below="@id/start_time_text"
+            tools:text="@string/end_time_name_annotation"
+            android:textSize="15sp" />
+    </RelativeLayout>
+</FrameLayout>

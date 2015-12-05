@@ -21,6 +21,7 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
@@ -35,10 +36,12 @@ import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 
 import mettinochmette.myapplication.data.api.ApiManager;
 import mettinochmette.myapplication.model.Geometry;
 import mettinochmette.myapplication.model.ParkingPlace;
+import mettinochmette.myapplication.model.ParkingProperty;
 import mettinochmette.myapplication.model.Place;
 import retrofit.Callback;
 import retrofit.Response;
@@ -62,7 +65,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     private String mActivityTitle;
     private ArrayList<LatLng> locations;
     private ArrayList<String> mStreetNames;
-
+    private HashMap<Marker, ParkingProperty> mMarkerMap;
     @TargetApi(Build.VERSION_CODES.LOLLIPOP)
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -156,7 +159,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
         mMap.setMyLocationEnabled(true);
-
+        mMap.setInfoWindowAdapter(this);
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED &&
                 ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
             Criteria criteria = new Criteria();
@@ -169,15 +172,17 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         ApiManager.getApi().getServiceTimeByDay("weekday", "måndag").enqueue(new Callback<Place>() {
             @Override
             public void onResponse(Response<Place> response, Retrofit retrofit) {
-                locations = new ArrayList<LatLng>();
+                locations = new ArrayList<>();
                 final ArrayList<ParkingPlace> mParkingPlaces = response.body().getParkingPlaces();
-                mStreetNames = new ArrayList<String>();
+                mStreetNames = new ArrayList<>();
+                mMarkerMap = new HashMap<>();
                 AsyncTask.execute(new Runnable() {
                     @Override
                     public void run() {
                         for (ParkingPlace parkPlace : mParkingPlaces) {
                             mStreetNames.add(parkPlace.getProperties().getStreetName());
                             Geometry geotag = parkPlace.getGeometry();
+
                             for (ArrayList<Float> cordinates : geotag.getCoordinates()) {
                                 locations.add(new LatLng(cordinates.get(1), cordinates.get(0)));
                             }
@@ -192,13 +197,14 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                         runOnUiThread(new Runnable() {
                             @Override
                             public void run() {
+                                Marker marker;
                                 for (int i = 0; i < mStreetNames.size(); i++) {
-                                    mMap.addMarker(new MarkerOptions()
+                                    marker = mMap.addMarker(new MarkerOptions()
                                                     .position(locations.get(i))
-                                                    .title(mStreetNames.get(i))
-                                    );
-                                }
+                                                    .title(mStreetNames.get(i)));
+                                    mMarkerMap.put(marker, mParkingPlaces.get(i).getProperties());
 
+                                }
                             }
                         });
                     }
@@ -255,12 +261,19 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
 
     @Override
     public View getInfoWindow(Marker marker) {
-        return null;
+        Log.i(TAG, "getInfoContents");
+        View popUp = View.inflate(this, R.layout.popup, null);
+        TextView street = (TextView) popUp.findViewById(R.id.street_text);
+        TextView startTime = (TextView) popUp.findViewById(R.id.start_time_text);
+        TextView endTime = (TextView) popUp.findViewById(R.id.end_time_text);
+        street.setText(String.format(getString(R.string.street_name_annotation), marker.getTitle()));
+        startTime.setText(String.format(getString(R.string.start_time_name_annotation), mMarkerMap.get(marker).getStartTime()));
+        endTime.setText(String.format(getString(R.string.end_time_name_annotation), mMarkerMap.get(marker).getEndTime()));
+        return popUp;
     }
 
     @Override
     public View getInfoContents(Marker marker) {
-        View popUp =
         return null;
     }
 }

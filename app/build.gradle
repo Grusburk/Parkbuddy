@@ -1,10 +1,16 @@
 
 apply plugin: 'com.android.application'
 android {
+    signingConfigs {
+        config {
+            keyAlias 'Amatörerna'
+            keyPassword 'mettis'
+            storeFile file('E:/AndroidStudioProjects/parkbuddy/my-release-key.keystore')
+            storePassword 'Bast12ishere'
+        }
+    }
     compileSdkVersion 23
     buildToolsVersion "23.0.2"
-
-
     defaultConfig {
         applicationId "mettinochmette.myapplication"
         minSdkVersion 15
