@@ -21,7 +21,6 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
@@ -31,6 +30,7 @@ import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
@@ -47,25 +47,35 @@ import retrofit.Callback;
 import retrofit.Response;
 import retrofit.Retrofit;
 
-public class MapsActivity extends AppCompatActivity implements OnMapReadyCallback, LocationListener, GoogleMap.InfoWindowAdapter,CityChooserFragment.OnCitySelectedListener {
+public class MapsActivity extends AppCompatActivity implements OnMapReadyCallback, LocationListener, GoogleMap.InfoWindowAdapter, CityChooserFragment.OnCitySelectedListener, GoogleMap.OnCameraChangeListener {
+
+
 
     private GoogleMap mMap;
     private Toolbar toolbar;
     private LocationManager locationManager;
     private String provider;
-    private Marker marker;
+    private Marker marked;
     private SharedPreferences sharedPreferences;
     private SupportMapFragment mapFragment;
     private Boolean remember;
-    private final String TAG = MapsActivity.class.getSimpleName();
     private ListView mDrawerList;
     private ArrayAdapter<String> mAdapter;
     private ActionBarDrawerToggle mDrawerToggle;
     private DrawerLayout mDrawerLayout;
     private String mActivityTitle;
+    private Location markerLocation;
+    private Location myLocation;
+    private LatLng target;
+    private CameraPosition cameraPosition;
     private ArrayList<LatLng> locations;
     private ArrayList<String> mStreetNames;
     private HashMap<Marker, ParkingProperty> mMarkerMap;
+    private ArrayList<ParkingPlace> mParkingPlaces;
+    private final String TAG = MapsActivity.class.getSimpleName();
+    private final int KM = 50;
+
+
     @TargetApi(Build.VERSION_CODES.LOLLIPOP)
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -159,6 +169,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
         mMap.setMyLocationEnabled(true);
+        mMap.setOnCameraChangeListener(this);
         mMap.setInfoWindowAdapter(this);
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED &&
                 ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
@@ -167,13 +178,12 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
             locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
             provider = locationManager.getBestProvider(criteria, true);
             locationManager.requestLocationUpdates(provider, 500L, 1f, this);
-
         }
         ApiManager.getApi().getServiceTimeByDay("weekday", "måndag").enqueue(new Callback<Place>() {
             @Override
             public void onResponse(Response<Place> response, Retrofit retrofit) {
                 locations = new ArrayList<>();
-                final ArrayList<ParkingPlace> mParkingPlaces = response.body().getParkingPlaces();
+                mParkingPlaces = response.body().getParkingPlaces();
                 mStreetNames = new ArrayList<>();
                 mMarkerMap = new HashMap<>();
                 AsyncTask.execute(new Runnable() {
@@ -182,40 +192,45 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                         for (ParkingPlace parkPlace : mParkingPlaces) {
                             mStreetNames.add(parkPlace.getProperties().getStreetName());
                             Geometry geotag = parkPlace.getGeometry();
-
                             for (ArrayList<Float> cordinates : geotag.getCoordinates()) {
                                 locations.add(new LatLng(cordinates.get(1), cordinates.get(0)));
                             }
                         }
-//                        for (ParkingPlace parkProperties : mParkingPlaces){
-//                            ParkingProperty mParkingproperties = parkProperties.getProperties();
-//                            for (ArrayList<String> mStreetNames : mParkingproperties.getStreetName(){
-//                                mStreetNames.add(mParkingproperties.getStreetName());
-//                            }
-//                        }
-
                         runOnUiThread(new Runnable() {
                             @Override
                             public void run() {
-                                Marker marker;
+                                markerLocation = new Location(provider);
                                 for (int i = 0; i < mStreetNames.size(); i++) {
-                                    marker = mMap.addMarker(new MarkerOptions()
-                                                    .position(locations.get(i))
-                                                    .title(mStreetNames.get(i)));
-                                    mMarkerMap.put(marker, mParkingPlaces.get(i).getProperties());
-
+                                    createMarkerWithinRange(KM, i, mParkingPlaces, myLocation);
                                 }
                             }
                         });
                     }
                 });
             }
-
             @Override
             public void onFailure(Throwable t) {
                 Log.i(TAG, t.getMessage());
             }
         });
+    }
+
+    private void createMarkerWithinRange(int KM, int i, ArrayList<ParkingPlace> mParkingPlaces, Location location) {
+        markerLocation.setLatitude(locations.get(i).latitude);
+        markerLocation.setLongitude(locations.get(i).longitude);
+        float locationDistance = location.distanceTo(markerLocation);
+        if (locationDistance <= (100 * KM)) {
+            Log.i(TAG, "jag kommer in");
+            markerCreator(mParkingPlaces, i);
+        }
+    }
+
+    private void markerCreator(ArrayList<ParkingPlace> mParkingPlaces, int i) {
+        Marker marker;
+        marker = mMap.addMarker(new MarkerOptions()
+                .position(locations.get(i))
+                .title(mStreetNames.get(i)));
+        mMarkerMap.put(marker, mParkingPlaces.get(i).getProperties());
     }
 
     @Override
@@ -229,10 +244,10 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
 
     @Override
     public void onLocationChanged(Location location) {
+        myLocation = location;
         LatLng myLocation = new LatLng(location.getLatitude(),location.getLongitude());
         mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(myLocation,25));
         Log.i(TAG, myLocation.latitude + "");
-
     }
 
     @Override
@@ -261,7 +276,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
 
     @Override
     public View getInfoWindow(Marker marker) {
-        Log.i(TAG, "getInfoContents");
+        marked = marker;
         View popUp = View.inflate(this, R.layout.popup, null);
         TextView street = (TextView) popUp.findViewById(R.id.street_text);
         TextView startTime = (TextView) popUp.findViewById(R.id.start_time_text);
@@ -270,10 +285,27 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         startTime.setText(String.format(getString(R.string.start_time_name_annotation), mMarkerMap.get(marker).getStartTime()));
         endTime.setText(String.format(getString(R.string.end_time_name_annotation), mMarkerMap.get(marker).getEndTime()));
         return popUp;
+
     }
 
     @Override
     public View getInfoContents(Marker marker) {
         return null;
+    }
+
+    @Override
+    public void onCameraChange(CameraPosition cameraPosition) {
+//        if (marked != null){
+//            marked.hideInfoWindow();
+//        }
+        Location cameraLocation = new Location(provider);
+        this.cameraPosition = cameraPosition;
+        cameraLocation.setLongitude(cameraPosition.target.longitude);
+        cameraLocation.setLatitude(cameraPosition.target.latitude);
+        if (mStreetNames!= null) {
+            for (int i = 0; i < mStreetNames.size(); i++) {
+                createMarkerWithinRange(KM, i, mParkingPlaces, cameraLocation);
+            }
+        }
     }
 }

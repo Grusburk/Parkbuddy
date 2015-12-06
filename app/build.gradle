@@ -5,7 +5,7 @@ android {
         config {
             keyAlias 'Amatörerna'
             keyPassword 'mettis'
-            storeFile file('E:/AndroidStudioProjects/parkbuddy/my-release-key.keystore')
+//            storeFile file('E:/AndroidStudioProjects/parkbuddy/my-release-key.keystore')
             storePassword 'Bast12ishere'
         }
     }
