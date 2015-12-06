@@ -49,8 +49,6 @@ import retrofit.Retrofit;
 
 public class MapsActivity extends AppCompatActivity implements OnMapReadyCallback, LocationListener, GoogleMap.InfoWindowAdapter, CityChooserFragment.OnCitySelectedListener, GoogleMap.OnCameraChangeListener {
 
-
-
     private GoogleMap mMap;
     private Toolbar toolbar;
     private LocationManager locationManager;
@@ -75,7 +73,6 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     private final String TAG = MapsActivity.class.getSimpleName();
     private final int KM = 50;
 
-
     @TargetApi(Build.VERSION_CODES.LOLLIPOP)
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -91,9 +88,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
 //        getSupportActionBar().setTitle((Html.fromHtml("<font color=\"#FFFFFF\">" + getString(R.string.app_name) + "</font>")));
         sharedPreferences = getSharedPreferences("PBuddy_Storage", Context.MODE_PRIVATE);
         remember = sharedPreferences.getBoolean("PBuddy_SavedPreferences", true);
-
 //        http://openparking.stockholm.se/LTF-Tolken/v1/ptillaten/all?apiKey=0d49d540-8c75-4a01-b8c7-ad221c4708ba
-
 //        if (remember) {
 //            Log.i(TAG,"SAVED");
 //            mapFragment = new SupportMapFragment();
@@ -104,24 +99,18 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
             getSupportFragmentManager()
                     .beginTransaction().add(R.id.map,new CityChooserFragment()).commit();
 //        }
-
-
         addDrawerItems();
         setupDrawer();
     }
-
     @Override
     protected void onPostCreate(Bundle savedInstanceState) {
         mDrawerToggle.syncState();
         super.onPostCreate(savedInstanceState);
     }
-
     @Override
     protected void onResume() {
         super.onResume();
-
     }
-
     private void addDrawerItems() {
         String[] drawerArray = { "test1", "test2", "test3", "test4", "test5" };
         mAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, drawerArray);
@@ -134,35 +123,18 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
             }
         });
     }
-
     private void setupDrawer() {
         mDrawerToggle = new ActionBarDrawerToggle(this, mDrawerLayout,
                 R.string.drawer_open, R.string.drawer_close) {
-
             /** Called when a drawer has settled in a completely open state. */
             public void onDrawerOpened(View drawerView) {
-
             }
-
             /** Called when a drawer has settled in a completely closed state. */
             public void onDrawerClosed(View view) {
-
             }
-
-
         };
         mDrawerToggle.setDrawerIndicatorEnabled(true);
         mDrawerLayout.setDrawerListener(mDrawerToggle);
-    }
-
-
-
-
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        getMenuInflater().inflate(R.menu.main_menu, menu);
-        return super.onCreateOptionsMenu(menu);
-
     }
 
     @Override
@@ -239,7 +211,6 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
             return true;
         }
         return super.onOptionsItemSelected(item);
-
     }
 
     @Override
@@ -252,26 +223,23 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
 
     @Override
     public void onStatusChanged(String provider, int status, Bundle extras) {
-
     }
 
     @Override
     public void onProviderEnabled(String provider) {
-
     }
 
     @Override
     public void onProviderDisabled(String provider) {
-
     }
 
     @Override
+
     public void onCitySelected(int position) {
         mapFragment = new SupportMapFragment();
         getSupportFragmentManager()
                 .beginTransaction().replace(R.id.map,mapFragment).commit();
         mapFragment.getMapAsync(this);
-
     }
 
     @Override
@@ -285,7 +253,6 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         startTime.setText(String.format(getString(R.string.start_time_name_annotation), mMarkerMap.get(marker).getStartTime()));
         endTime.setText(String.format(getString(R.string.end_time_name_annotation), mMarkerMap.get(marker).getEndTime()));
         return popUp;
-
     }
 
     @Override
