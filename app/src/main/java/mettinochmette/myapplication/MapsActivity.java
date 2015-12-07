@@ -61,7 +61,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     private DrawerLayout mDrawerLayout;
     private String mActivityTitle;
 //    private Location markerLocation;
-    private Location myLocation;
+//    private Location myLocation;
 //    private LatLng target;
     private ArrayList<LatLng> locations;
     private ArrayList<LatLng> viableMarkerPositions;
@@ -232,7 +232,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     }
 
     // Will show or hide marker depending on distance.
-    private void showMarkers(Location currLocation) {
+    private void showMarkers() {
         LatLngBounds bounds = mMap.getProjection().getVisibleRegion().latLngBounds;
         ArrayList<LatLng> markersToRemove = new ArrayList<>();
         ArrayList<LatLng> markersToAdd = new ArrayList<>();
@@ -268,11 +268,10 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
 
     @Override
     public void onLocationChanged(Location location) {
-        myLocation = location;
         LatLng myLocationAsLatLng = new LatLng(location.getLatitude(), location.getLongitude());
         mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(myLocationAsLatLng, 25));
         if (viableMarkerPositions != null) {
-            showMarkers(myLocation);
+            showMarkers();
         }
     }
 
@@ -312,13 +311,10 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     @Override
     public void onCameraChange(CameraPosition cameraPosition) {
         Log.i(TAG, "------------CAMERA CHANGED--------------- zoom: " + cameraPosition.zoom);
-        Location cameraLocation = new Location(provider);
-        cameraLocation.setLongitude(cameraPosition.target.longitude);
-        cameraLocation.setLatitude(cameraPosition.target.latitude);
         // Show partially if zoomed in. Check for mMarkerMap since it can be null.
         // Could prob initialize hashMap earlier ot avoid.
         if (viableMarkerPositions != null && viableMarkerPositions.size() > 100) {
-            showMarkers(cameraLocation);
+            showMarkers();
         }
 //        else if (viableMarkerPositions != null && cameraPosition.zoom < 12) {
             // We really don't need to hide markers when zoomed out to far. Looks ridonculous when moving, so instead we show all.
