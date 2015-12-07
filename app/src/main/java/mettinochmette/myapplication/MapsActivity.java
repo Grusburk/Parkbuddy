@@ -65,12 +65,11 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     private Location myLocation;
     private LatLng target;
     private ArrayList<LatLng> locations;
-    private ArrayList<String> mStreetNames;
     private HashMap<Marker, ParkingProperty> mMarkerMap;
     private ArrayList<ParkingPlace> mParkingPlaces;
     private final String TAG = MapsActivity.class.getSimpleName();
     private final int KM = 50;
-    private android.os.Handler handler;
+//    private ClusterManager<MyMarker> clusterManager;
 
     @TargetApi(Build.VERSION_CODES.LOLLIPOP)
     @Override
@@ -143,10 +142,12 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
 
     @Override
     public void onMapReady(GoogleMap googleMap) {
+//        clusterManager = new ClusterManager<>(this, googleMap);
         mMap = googleMap;
         mMap.setMyLocationEnabled(true);
-        mMap.setOnCameraChangeListener(this);
         mMap.setInfoWindowAdapter(this);
+        mMap.setOnCameraChangeListener(this);
+//        mMap.setOnCameraChangeListener(clusterManager);
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED &&
                 ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
             Criteria criteria = new Criteria();
@@ -159,16 +160,14 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
             public void onResponse(Response<Place> response, Retrofit retrofit) {
                 mParkingPlaces = response.body().getParkingPlaces();
                 locations = new ArrayList<>();
-                mStreetNames = new ArrayList<>();
                 mMarkerMap = new HashMap<>();
                 AsyncTask.execute(new Runnable() {
                     @Override
                     public void run() {
                         for (ParkingPlace parkPlace : mParkingPlaces) {
-                            mStreetNames.add(parkPlace.getProperties().getStreetName());
                             Geometry geotag = parkPlace.getGeometry();
-                            for (ArrayList<Float> cordinates : geotag.getCoordinates()) {
-                                locations.add(new LatLng(cordinates.get(1), cordinates.get(0)));
+                            for (ArrayList<Float> coordinates : geotag.getCoordinates()) {
+                                locations.add(new LatLng(coordinates.get(1), coordinates.get(0)));
                             }
                         }
                         runOnUiThread(new Runnable() {
@@ -181,10 +180,10 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                                 // depending if they are within range of the location passed in as argument.
                                 // showMarkers call extracted to onLocationChange and onCameraChange due
                                 // to myLocation could actually be null here.
-                                for (int i = 0; i < mStreetNames.size(); i++) {
-                                    marker = mMap.addMarker(new MarkerOptions()
-                                            .position(locations.get(i))
-                                            .title(mStreetNames.get(i)));
+                                for (int i = 0; i < locations.size(); i++) {
+//                                    clusterManager.addItem(new MyMarker(locations.get(i)));
+
+                                    marker = mMap.addMarker(new MarkerOptions().position(locations.get(i)));
                                     mMarkerMap.put(marker, mParkingPlaces.get(i).getProperties());
                                 }
                             }
@@ -260,7 +259,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         TextView street = (TextView) popUp.findViewById(R.id.street_text);
         TextView startTime = (TextView) popUp.findViewById(R.id.start_time_text);
         TextView endTime = (TextView) popUp.findViewById(R.id.end_time_text);
-        street.setText(String.format(getString(R.string.street_name_annotation), marker.getTitle()));
+        street.setText(String.format(getString(R.string.street_name_annotation), mMarkerMap.get(marker).getStreetName()));
         startTime.setText(String.format(getString(R.string.start_time_name_annotation), mMarkerMap.get(marker).getStartTime()));
         endTime.setText(String.format(getString(R.string.end_time_name_annotation), mMarkerMap.get(marker).getEndTime()));
         return popUp;
@@ -280,7 +279,6 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         // Could prob initialize hashMap earlier ot avoid.
         if (mMarkerMap != null && cameraPosition.zoom >= 12) {
             showMarkers(cameraLocation);
-            Log.i(TAG, "Showing local markers");
         } else if (mMarkerMap != null && cameraPosition.zoom < 12) {
             // We really don't need to hide markers when zoomed out to far. Looks ridonculous when moving, so instead we show all.
             // TODO: Performance bad if doing this? mb lock zoom level itc go figure.
