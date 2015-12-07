@@ -14,16 +14,6 @@ import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
 
-import java.util.ArrayList;
-
-import mettinochmette.myapplication.data.api.ApiManager;
-import mettinochmette.myapplication.model.ParkingPlace;
-import mettinochmette.myapplication.model.ParkingProperty;
-import mettinochmette.myapplication.model.Place;
-import retrofit.Callback;
-import retrofit.Response;
-import retrofit.Retrofit;
-
 /**
  * A simple {@link Fragment} subclass.
  */
@@ -73,7 +63,6 @@ public class CityChooserFragment extends Fragment {
             @Override
             public void onClick(View v) {
                 onCitySelectedListener.onCitySelected(2);
-                Log.i(TAG, "du är en slyna");
                 if (checkboxRemember.isChecked()) {
                     sharedPreferences = CityChooserFragment.this.getActivity().getSharedPreferences("PBuddy_Storage", Context.MODE_PRIVATE);
                     editor = sharedPreferences.edit();

@@ -18,7 +18,6 @@ import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
-import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
@@ -37,6 +36,7 @@ import com.google.android.gms.maps.model.MarkerOptions;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Set;
 
 import mettinochmette.myapplication.data.api.ApiManager;
 import mettinochmette.myapplication.model.Geometry;
@@ -53,7 +53,6 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     private Toolbar toolbar;
     private LocationManager locationManager;
     private String provider;
-    private Marker marked;
     private SharedPreferences sharedPreferences;
     private SupportMapFragment mapFragment;
     private Boolean remember;
@@ -65,13 +64,13 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     private Location markerLocation;
     private Location myLocation;
     private LatLng target;
-    private CameraPosition cameraPosition;
     private ArrayList<LatLng> locations;
     private ArrayList<String> mStreetNames;
     private HashMap<Marker, ParkingProperty> mMarkerMap;
     private ArrayList<ParkingPlace> mParkingPlaces;
     private final String TAG = MapsActivity.class.getSimpleName();
     private final int KM = 50;
+    private android.os.Handler handler;
 
     @TargetApi(Build.VERSION_CODES.LOLLIPOP)
     @Override
@@ -82,9 +81,9 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         setSupportActionBar(toolbar);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         getSupportActionBar().setHomeButtonEnabled(true);
-        mDrawerLayout = (DrawerLayout)findViewById(R.id.drawerLayout);
+        mDrawerLayout = (DrawerLayout) findViewById(R.id.drawerLayout);
         mActivityTitle = getTitle().toString();
-        mDrawerList = (ListView)findViewById(R.id.navList);
+        mDrawerList = (ListView) findViewById(R.id.navList);
 //        getSupportActionBar().setTitle((Html.fromHtml("<font color=\"#FFFFFF\">" + getString(R.string.app_name) + "</font>")));
         sharedPreferences = getSharedPreferences("PBuddy_Storage", Context.MODE_PRIVATE);
         remember = sharedPreferences.getBoolean("PBuddy_SavedPreferences", true);
@@ -96,24 +95,27 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
 //                    .beginTransaction().replace(R.id.map,mapFragment).commit();
 //            mapFragment.getMapAsync(this);
 //        } else {
-            getSupportFragmentManager()
-                    .beginTransaction().add(R.id.map,new CityChooserFragment()).commit();
+        getSupportFragmentManager()
+                .beginTransaction().add(R.id.map, new CityChooserFragment()).commit();
 //        }
         addDrawerItems();
         setupDrawer();
     }
+
     @Override
     protected void onPostCreate(Bundle savedInstanceState) {
         mDrawerToggle.syncState();
         super.onPostCreate(savedInstanceState);
     }
+
     @Override
     protected void onResume() {
         super.onResume();
     }
+
     private void addDrawerItems() {
-        String[] drawerArray = { "test1", "test2", "test3", "test4", "test5" };
-        mAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, drawerArray);
+        String[] drawerArray = {"test1", "test2", "test3", "test4", "test5"};
+        mAdapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, drawerArray);
         mDrawerList.setAdapter(mAdapter);
 
         mDrawerList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
@@ -123,12 +125,14 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
             }
         });
     }
+
     private void setupDrawer() {
         mDrawerToggle = new ActionBarDrawerToggle(this, mDrawerLayout,
                 R.string.drawer_open, R.string.drawer_close) {
             /** Called when a drawer has settled in a completely open state. */
             public void onDrawerOpened(View drawerView) {
             }
+
             /** Called when a drawer has settled in a completely closed state. */
             public void onDrawerClosed(View view) {
             }
@@ -146,16 +150,15 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED &&
                 ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
             Criteria criteria = new Criteria();
-            Log.i(TAG,"dfdf");
             locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
             provider = locationManager.getBestProvider(criteria, true);
             locationManager.requestLocationUpdates(provider, 500L, 1f, this);
         }
-        ApiManager.getApi().getServiceTimeByDay("weekday", "måndag").enqueue(new Callback<Place>() {
+        ApiManager.getApi().getAvailableParkings().enqueue(new Callback<Place>() {
             @Override
             public void onResponse(Response<Place> response, Retrofit retrofit) {
-                locations = new ArrayList<>();
                 mParkingPlaces = response.body().getParkingPlaces();
+                locations = new ArrayList<>();
                 mStreetNames = new ArrayList<>();
                 mMarkerMap = new HashMap<>();
                 AsyncTask.execute(new Runnable() {
@@ -171,15 +174,25 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                         runOnUiThread(new Runnable() {
                             @Override
                             public void run() {
-                                markerLocation = new Location(provider);
+                                Marker marker;
+                                // Updated to add all viable markers to the HashMap
+                                // Before we only added the ones that was visible.
+                                // New method showMarkers will iterate over HashMap and show markers
+                                // depending if they are within range of the location passed in as argument.
+                                // showMarkers call extracted to onLocationChange and onCameraChange due
+                                // to myLocation could actually be null here.
                                 for (int i = 0; i < mStreetNames.size(); i++) {
-                                    createMarkerWithinRange(KM, i, mParkingPlaces, myLocation);
+                                    marker = mMap.addMarker(new MarkerOptions()
+                                            .position(locations.get(i))
+                                            .title(mStreetNames.get(i)));
+                                    mMarkerMap.put(marker, mParkingPlaces.get(i).getProperties());
                                 }
                             }
                         });
                     }
                 });
             }
+
             @Override
             public void onFailure(Throwable t) {
                 Log.i(TAG, t.getMessage());
@@ -187,38 +200,42 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         });
     }
 
-    private void createMarkerWithinRange(int KM, int i, ArrayList<ParkingPlace> mParkingPlaces, Location location) {
-        markerLocation.setLatitude(locations.get(i).latitude);
-        markerLocation.setLongitude(locations.get(i).longitude);
-        float locationDistance = location.distanceTo(markerLocation);
-        if (locationDistance <= (100 * KM)) {
-            Log.i(TAG, "jag kommer in");
-            markerCreator(mParkingPlaces, i);
+    // Will show or hide marker depending on distance.
+    private void showMarkers(Location currLocation) {
+        Set<Marker> markerSet = mMarkerMap.keySet();
+        Location markerLocation = new Location(provider);
+        for (Marker marker : markerSet) {
+            markerLocation.setLatitude(marker.getPosition().latitude);
+            markerLocation.setLongitude(marker.getPosition().longitude);
+            if (currLocation.distanceTo(markerLocation) <= (100 * KM)) {
+                marker.setVisible(true);
+            } else {
+                marker.setVisible(false);
+            }
         }
     }
 
-    private void markerCreator(ArrayList<ParkingPlace> mParkingPlaces, int i) {
-        Marker marker;
-        marker = mMap.addMarker(new MarkerOptions()
-                .position(locations.get(i))
-                .title(mStreetNames.get(i)));
-        mMarkerMap.put(marker, mParkingPlaces.get(i).getProperties());
+    // Shows all markers.
+    private void showAllMarkers() {
+        Set<Marker> markerSet = mMarkerMap.keySet();
+        for (Marker marker : markerSet) {
+            marker.setVisible(true);
+        }
     }
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        if (mDrawerToggle.onOptionsItemSelected(item)) {
-            return true;
-        }
-        return super.onOptionsItemSelected(item);
+        return mDrawerToggle.onOptionsItemSelected(item) || super.onOptionsItemSelected(item);
     }
 
     @Override
     public void onLocationChanged(Location location) {
         myLocation = location;
-        LatLng myLocation = new LatLng(location.getLatitude(),location.getLongitude());
-        mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(myLocation,25));
-        Log.i(TAG, myLocation.latitude + "");
+        LatLng myLocationAsLatLng = new LatLng(location.getLatitude(), location.getLongitude());
+        mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(myLocationAsLatLng, 25));
+        if (mMarkerMap != null) {
+            showMarkers(myLocation);
+        }
     }
 
     @Override
@@ -237,14 +254,12 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
 
     public void onCitySelected(int position) {
         mapFragment = new SupportMapFragment();
-        getSupportFragmentManager()
-                .beginTransaction().replace(R.id.map,mapFragment).commit();
+        getSupportFragmentManager().beginTransaction().replace(R.id.map, mapFragment).commit();
         mapFragment.getMapAsync(this);
     }
 
     @Override
     public View getInfoWindow(Marker marker) {
-        marked = marker;
         View popUp = View.inflate(this, R.layout.popup, null);
         TextView street = (TextView) popUp.findViewById(R.id.street_text);
         TextView startTime = (TextView) popUp.findViewById(R.id.start_time_text);
@@ -262,17 +277,20 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
 
     @Override
     public void onCameraChange(CameraPosition cameraPosition) {
-//        if (marked != null){
-//            marked.hideInfoWindow();
-//        }
         Location cameraLocation = new Location(provider);
-        this.cameraPosition = cameraPosition;
         cameraLocation.setLongitude(cameraPosition.target.longitude);
         cameraLocation.setLatitude(cameraPosition.target.latitude);
-        if (mStreetNames!= null) {
-            for (int i = 0; i < mStreetNames.size(); i++) {
-                createMarkerWithinRange(KM, i, mParkingPlaces, cameraLocation);
-            }
+        // Show partially if zoomed in. Check for mMarkerMap since it can be null.
+        // Could prob initialize hashMap earlier ot avoid.
+        if (mMarkerMap != null && cameraPosition.zoom >= 12) {
+            showMarkers(cameraLocation);
+            Log.i(TAG, "Showing local markers");
+        } else if (mMarkerMap != null && cameraPosition.zoom < 12) {
+            // We really don't need to hide markers when zoomed out to far. Looks ridonculous when moving, so instead we show all.
+            // TODO: Performance bad if doing this? mb lock zoom level itc.
+            showAllMarkers();
+
         }
+//        }
     }
 }
