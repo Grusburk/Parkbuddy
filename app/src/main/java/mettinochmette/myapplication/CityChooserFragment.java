@@ -67,7 +67,7 @@ public class CityChooserFragment extends Fragment {
                     sharedPreferences = CityChooserFragment.this.getActivity().getSharedPreferences("PBuddy_Storage", Context.MODE_PRIVATE);
                     editor = sharedPreferences.edit();
                     editor.putBoolean("PBuddy_SavedPreferences", checkboxRemember.isChecked());
-                    editor.commit();
+                    editor.apply();
                 }
             }
         });
