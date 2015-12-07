@@ -194,7 +194,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                               for (final ParkingPlace parkPlace : mParkingPlaces) {
                                   Geometry geotag = parkPlace.getGeometry();
                                   for (final LatLng coordinates : geotag.convertToLatLng()) {
-                                      if (coordinates != null) {
+                                      if (coordinates != null && coordinates.latitude > 0 && coordinates.longitude > 0) {
                                           viableMarkerPositions.add(coordinates);
                                           Log.i(TAG, "Adding markers yay: " + viableMarkerPositions.size());
                                       }
@@ -234,23 +234,23 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     // Will show or hide marker depending on distance.
     private void showMarkers() {
         LatLngBounds bounds = mMap.getProjection().getVisibleRegion().latLngBounds;
-        ArrayList<LatLng> markersToRemove = new ArrayList<>();
-        ArrayList<LatLng> markersToAdd = new ArrayList<>();
+//        ArrayList<LatLng> markersToRemove = new ArrayList<>();
+//        ArrayList<LatLng> markersToAdd = new ArrayList<>();
 
         for (LatLng marker : viableMarkerPositions) {
             if (bounds.contains(marker) && markerMap.containsKey(marker) && !markerMap.get(marker).isVisible()) {
                 markerMap.get(marker).setVisible(true);
             } else if (bounds.contains(marker) && !markerMap.containsKey(marker)) {
                 markerMap.put(marker, mMap.addMarker(new MarkerOptions().position(marker)));
-                markersToRemove.add(marker);
+//                markersToRemove.add(marker);
             } else if(!bounds.contains(marker) && markerMap.containsKey(marker)) {
                 markerMap.get(marker).remove();
                 markerMap.remove(marker);
-                markersToAdd.add(marker);
+//                markersToAdd.add(marker);
             }
         }
-        viableMarkerPositions.removeAll(markersToRemove);
-        viableMarkerPositions.addAll(markersToAdd);
+//        viableMarkerPositions.removeAll(markersToRemove);
+//        viableMarkerPositions.addAll(markersToAdd);
         Log.i(TAG, "New size is: " + viableMarkerPositions.size());
     }
 
