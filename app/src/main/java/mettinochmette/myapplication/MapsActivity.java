@@ -239,19 +239,15 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     }
 
     @Override
-    public void onStatusChanged(String provider, int status, Bundle extras) {
-    }
+    public void onStatusChanged(String provider, int status, Bundle extras) {}
 
     @Override
-    public void onProviderEnabled(String provider) {
-    }
+    public void onProviderEnabled(String provider) {}
 
     @Override
-    public void onProviderDisabled(String provider) {
-    }
+    public void onProviderDisabled(String provider) {}
 
     @Override
-
     public void onCitySelected(int position) {
         mapFragment = new SupportMapFragment();
         getSupportFragmentManager().beginTransaction().replace(R.id.map, mapFragment).commit();
@@ -287,7 +283,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
             Log.i(TAG, "Showing local markers");
         } else if (mMarkerMap != null && cameraPosition.zoom < 12) {
             // We really don't need to hide markers when zoomed out to far. Looks ridonculous when moving, so instead we show all.
-            // TODO: Performance bad if doing this? mb lock zoom level itc.
+            // TODO: Performance bad if doing this? mb lock zoom level itc go figure.
             showAllMarkers();
 
         }
