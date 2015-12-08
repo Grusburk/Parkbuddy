@@ -5,11 +5,11 @@ import android.annotation.TargetApi;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
+import android.graphics.Color;
 import android.location.Criteria;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
-import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.v4.app.ActivityCompat;
@@ -34,13 +34,15 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.android.gms.maps.model.Polyline;
+import com.google.android.gms.maps.model.PolylineOptions;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 
 import mettinochmette.myapplication.data.api.ApiManager;
-import mettinochmette.myapplication.model.Geometry;
 import mettinochmette.myapplication.model.ParkingPlace;
+import mettinochmette.myapplication.model.ParkingProperty;
 import mettinochmette.myapplication.model.Place;
 import retrofit.Callback;
 import retrofit.Response;
@@ -59,13 +61,14 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     private ArrayAdapter<String> mAdapter;
     private ActionBarDrawerToggle mDrawerToggle;
     private DrawerLayout mDrawerLayout;
-    private String mActivityTitle;
+//    private String mActivityTitle;
 //    private Location markerLocation;
 //    private Location myLocation;
 //    private LatLng target;
-    private ArrayList<LatLng> locations;
-    private ArrayList<LatLng> viableMarkerPositions;
+//    private ArrayList<LatLng> locations;
+    private ArrayList<ParkingProperty> parkingProperties;
     private HashMap<LatLng, Marker> markerMap;
+    private HashMap<LatLng, Polyline> polyMap;
 //    private HashSet<Marker> mMarkerMap;
     private ArrayList<ParkingPlace> mParkingPlaces;
     private final String TAG = MapsActivity.class.getSimpleName();
@@ -82,7 +85,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         getSupportActionBar().setHomeButtonEnabled(true);
         mDrawerLayout = (DrawerLayout) findViewById(R.id.drawerLayout);
-        mActivityTitle = getTitle().toString();
+//        mActivityTitle = getTitle().toString();
         mDrawerList = (ListView) findViewById(R.id.navList);
 //        getSupportActionBar().setTitle((Html.fromHtml("<font color=\"#FFFFFF\">" + getString(R.string.app_name) + "</font>")));
         sharedPreferences = getSharedPreferences("PBuddy_Storage", Context.MODE_PRIVATE);
@@ -160,68 +163,8 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
             @Override
             public void onResponse(Response<Place> response, Retrofit retrofit) {
                 mParkingPlaces = response.body().getParkingPlaces();
-                locations = new ArrayList<>();
-//                mMarkerMap = new HashSet<>(response.body().getTotalFeatures());
                 markerMap = new HashMap<>(response.body().getTotalFeatures());
-                viableMarkerPositions = new ArrayList<>(response.body().getTotalFeatures());
-//                Observable.from(mParkingPlaces).map(new Func1<ParkingPlace, ArrayList<LatLng>>() {
-//
-//                    @Override
-//                    public ArrayList<LatLng> call(ParkingPlace parkingPlace) {
-//                        return parkingPlace.getGeometry().convertToLatLng();
-//                    }
-//                }).flatMap(new Func1<ArrayList<LatLng>, Observable<LatLng>>() {
-//                    @Override
-//                    public Observable<LatLng> call(ArrayList<LatLng> latLngs) {
-//                        return Observable.from(latLngs);
-//                    }
-//                }).filter(new Func1<LatLng, Boolean>() {
-//                    @Override
-//                    public Boolean call(LatLng latLng) {
-//                        return latLng != null && latLng.latitude > 0 && latLng.longitude > 0;
-//                    }
-//                }).subscribeOn(Schedulers.computation()).observeOn(Schedulers.computation()).subscribe(new Action1<LatLng>() {
-//                    @Override
-//                    public void call(LatLng latLng) {
-//                        viableMarkerPositions.add(latLng);
-//                        Log.i(TAG, "Adding markers yay: " + viableMarkerPositions.size());
-////                        mMarkerMap.add(mMap.addMarker(new MarkerOptions().position(latLng).visible(false)));
-//                    }
-//                });
-                AsyncTask.execute(new Runnable() {
-                          @Override
-                          public void run() {
-                              for (final ParkingPlace parkPlace : mParkingPlaces) {
-                                  Geometry geotag = parkPlace.getGeometry();
-                                  for (final LatLng coordinates : geotag.convertToLatLng()) {
-                                      if (coordinates != null && coordinates.latitude > 0 && coordinates.longitude > 0) {
-                                          viableMarkerPositions.add(coordinates);
-                                          Log.i(TAG, "Adding markers yay: " + viableMarkerPositions.size());
-                                      }
-                                  }
-                              }
-                          }
-                      });
-//                        runOnUiThread(new Runnable() {
-//                            @Override
-//                            public void run() {
-//                                Marker marker;
-//                                // Updated to add all viable markers to the HashMap
-//                                // Before we only added the ones that was visible.
-//                                // New method showMarkers will iterate over HashMap and show markers
-//                                // depending if they are within range of the location passed in as argument.
-//                                // showMarkers call extracted to onLocationChange and onCameraChange due
-//                                // to myLocation could actually be null here.
-//                                for (int i = 0; i < locations.size(); i++) {
-//                                    clusterManager.addItem(new MyMarker(locations.get(i)));
-//
-//                                    marker = mMap.addMarker(new MarkerOptions().position(locations.get(i)));
-//                                    mMarkerMap.put(marker, mParkingPlaces.get(i).getProperties());
-//                                }
-//                            }
-//                        });
-//                    }
-//                });
+                polyMap = new HashMap<>(response.body().getTotalFeatures());
             }
 
             @Override
@@ -234,32 +177,22 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     // Will show or hide marker depending on distance.
     private void showMarkers() {
         LatLngBounds bounds = mMap.getProjection().getVisibleRegion().latLngBounds;
-//        ArrayList<LatLng> markersToRemove = new ArrayList<>();
-//        ArrayList<LatLng> markersToAdd = new ArrayList<>();
-
-        for (LatLng marker : viableMarkerPositions) {
+        LatLng marker;
+        for (ParkingPlace place : mParkingPlaces) {
+            marker = place.getGeometry().convertToLatLng().get(0);
             if (bounds.contains(marker) && markerMap.containsKey(marker) && !markerMap.get(marker).isVisible()) {
                 markerMap.get(marker).setVisible(true);
             } else if (bounds.contains(marker) && !markerMap.containsKey(marker)) {
                 markerMap.put(marker, mMap.addMarker(new MarkerOptions().position(marker)));
-//                markersToRemove.add(marker);
+                polyMap.put(marker, mMap.addPolyline(new PolylineOptions().color(Color.BLACK).width(10).addAll(place.getGeometry().convertToLatLng())));
             } else if(!bounds.contains(marker) && markerMap.containsKey(marker)) {
                 markerMap.get(marker).remove();
                 markerMap.remove(marker);
-//                markersToAdd.add(marker);
+                polyMap.get(marker).remove();
+                polyMap.remove(marker);
             }
         }
-//        viableMarkerPositions.removeAll(markersToRemove);
-//        viableMarkerPositions.addAll(markersToAdd);
-        Log.i(TAG, "New size is: " + viableMarkerPositions.size());
     }
-
-//    // Shows all markers.
-//    private void showAllMarkers() {
-//        for (Marker marker : markerMap) {
-//            marker.setVisible(true);
-//        }
-//    }
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
@@ -270,7 +203,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     public void onLocationChanged(Location location) {
         LatLng myLocationAsLatLng = new LatLng(location.getLatitude(), location.getLongitude());
         mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(myLocationAsLatLng, 25));
-        if (viableMarkerPositions != null) {
+        if (mParkingPlaces != null) {
             showMarkers();
         }
     }
@@ -313,7 +246,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         Log.i(TAG, "------------CAMERA CHANGED--------------- zoom: " + cameraPosition.zoom);
         // Show partially if zoomed in. Check for mMarkerMap since it can be null.
         // Could prob initialize hashMap earlier ot avoid.
-        if (viableMarkerPositions != null && viableMarkerPositions.size() > 100) {
+        if (mParkingPlaces != null && mParkingPlaces.size() > 100) {
             showMarkers();
         }
 //        else if (viableMarkerPositions != null && cameraPosition.zoom < 12) {

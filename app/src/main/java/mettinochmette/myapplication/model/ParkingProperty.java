@@ -1,8 +1,8 @@
 package mettinochmette.myapplication.model;
 
+import com.google.android.gms.maps.model.LatLng;
 import com.google.gson.annotations.SerializedName;
 
-import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Date;
 
@@ -42,6 +42,10 @@ public class ParkingProperty {
     private String parkingDistrict;
     @SerializedName("ADDRESS")
     private String address;
+    @SerializedName("bbox")
+    private ArrayList<Float> mapBoxCoordinates;
+    private ArrayList<LatLng> boxCoordinatesLatLng;
+    private LatLng latLngs;
 
     public int getFeatureObjectId() {
         return featureObjectId;

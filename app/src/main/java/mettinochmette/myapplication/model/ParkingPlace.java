@@ -1,5 +1,6 @@
 package mettinochmette.myapplication.model;
 
+import com.google.android.gms.maps.model.LatLng;
 import com.google.gson.annotations.SerializedName;
 
 /**
@@ -13,6 +14,7 @@ public class ParkingPlace {
     @SerializedName("geometry_name")
     private String geometryName;
     private ParkingProperty properties;
+    private LatLng location;
 
     public String getType() {
         return type;
