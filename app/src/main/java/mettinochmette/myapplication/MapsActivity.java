@@ -42,7 +42,6 @@ import java.util.HashMap;
 
 import mettinochmette.myapplication.data.api.ApiManager;
 import mettinochmette.myapplication.model.ParkingPlace;
-import mettinochmette.myapplication.model.ParkingProperty;
 import mettinochmette.myapplication.model.Place;
 import retrofit.Callback;
 import retrofit.Response;
@@ -61,15 +60,8 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     private ArrayAdapter<String> mAdapter;
     private ActionBarDrawerToggle mDrawerToggle;
     private DrawerLayout mDrawerLayout;
-//    private String mActivityTitle;
-//    private Location markerLocation;
-//    private Location myLocation;
-//    private LatLng target;
-//    private ArrayList<LatLng> locations;
-    private ArrayList<ParkingProperty> parkingProperties;
     private HashMap<LatLng, Marker> markerMap;
     private HashMap<LatLng, Polyline> polyMap;
-//    private HashSet<Marker> mMarkerMap;
     private ArrayList<ParkingPlace> mParkingPlaces;
     private final String TAG = MapsActivity.class.getSimpleName();
     private final int KM = 50;
