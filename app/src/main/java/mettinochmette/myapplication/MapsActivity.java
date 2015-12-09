@@ -18,6 +18,7 @@ import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
@@ -29,6 +30,7 @@ import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.LatLngBounds;
@@ -77,9 +79,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         getSupportActionBar().setHomeButtonEnabled(true);
         mDrawerLayout = (DrawerLayout) findViewById(R.id.drawerLayout);
-//        mActivityTitle = getTitle().toString();
         mDrawerList = (ListView) findViewById(R.id.navList);
-//        getSupportActionBar().setTitle((Html.fromHtml("<font color=\"#FFFFFF\">" + getString(R.string.app_name) + "</font>")));
         sharedPreferences = getSharedPreferences("PBuddy_Storage", Context.MODE_PRIVATE);
         remember = sharedPreferences.getBoolean("PBuddy_SavedPreferences", true);
 //        http://openparking.stockholm.se/LTF-Tolken/v1/ptillaten/all?apiKey=0d49d540-8c75-4a01-b8c7-ad221c4708ba
@@ -95,6 +95,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
 //        }
         addDrawerItems();
         setupDrawer();
+
     }
 
     @Override
@@ -109,14 +110,37 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     }
 
     private void addDrawerItems() {
-        String[] drawerArray = {"test1", "test2", "test3", "test4", "test5"};
+        String[] drawerArray = {"test1", "Byt Stad", "test3", "test4", "Inställningar"};
         mAdapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, drawerArray);
         mDrawerList.setAdapter(mAdapter);
 
         mDrawerList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-
+                switch(position) {
+                    case 0:
+                        Log.i(TAG, "position 0");
+                        mDrawerLayout.closeDrawers();
+                        break;
+                    case 1:
+                        Log.i(TAG, "position 1");
+                        getSupportFragmentManager().beginTransaction().add(R.id.map, new CityChooserFragment()).commit();
+                        mDrawerLayout.closeDrawers();
+                        break;
+                    case 2:
+                        Log.i(TAG, "position 2");
+                        mDrawerLayout.closeDrawers();
+                        break;
+                    case 3:
+                        Log.i(TAG, "position 3");
+                        mDrawerLayout.closeDrawers();
+                        break;
+                    case 4:
+                        Log.i(TAG, "position 4");
+                        getSupportFragmentManager().beginTransaction().add(R.id.map, new SettingsFragment()).commit();
+                        mDrawerLayout.closeDrawers();
+                        break;
+                }
             }
         });
     }
@@ -175,8 +199,8 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
             if (bounds.contains(marker) && markerMap.containsKey(marker) && !markerMap.get(marker).isVisible()) {
                 markerMap.get(marker).setVisible(true);
             } else if (bounds.contains(marker) && !markerMap.containsKey(marker)) {
-                markerMap.put(marker, mMap.addMarker(new MarkerOptions().position(marker)));
-                polyMap.put(marker, mMap.addPolyline(new PolylineOptions().color(Color.BLACK).width(10).addAll(place.getGeometry().convertToLatLng())));
+                markerMap.put(marker, mMap.addMarker(new MarkerOptions().position(marker).icon(BitmapDescriptorFactory.fromResource(R.drawable.parkmarker))));
+                polyMap.put(marker, mMap.addPolyline(new PolylineOptions().color(getResources().getColor(R.color.colorPrimary)).width(10).addAll(place.getGeometry().convertToLatLng())));
             } else if(!bounds.contains(marker) && markerMap.containsKey(marker)) {
                 markerMap.get(marker).remove();
                 markerMap.remove(marker);
@@ -194,7 +218,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     @Override
     public void onLocationChanged(Location location) {
         LatLng myLocationAsLatLng = new LatLng(location.getLatitude(), location.getLongitude());
-        mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(myLocationAsLatLng, 25));
+        mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(myLocationAsLatLng, 18));
         if (mParkingPlaces != null) {
             showMarkers();
         }
@@ -218,6 +242,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
 
     @Override
     public View getInfoWindow(Marker marker) {
+
         View popUp = View.inflate(this, R.layout.popup, null);
         TextView street = (TextView) popUp.findViewById(R.id.street_text);
         TextView startTime = (TextView) popUp.findViewById(R.id.start_time_text);
@@ -249,4 +274,5 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
 //        }
 //        }
     }
+
 }
