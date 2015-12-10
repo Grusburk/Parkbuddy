@@ -42,8 +42,15 @@ public class ParkingProperty {
     private String parkingDistrict;
     @SerializedName("ADDRESS")
     private String address;
-    @SerializedName("VF_PLATS_TYP")
+    @SerializedName("VEHICLE")
     private String typeOfParkingPlace;
+    @SerializedName("VF_PLATS_TYP")
+    private String parkingType;
+
+    public String getParkingType() {
+        return parkingType;
+    }
+
     @SerializedName("bbox")
     private ArrayList<Float> mapBoxCoordinates;
     private ArrayList<LatLng> boxCoordinatesLatLng;

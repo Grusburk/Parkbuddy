@@ -21,6 +21,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.CheckBox;
 import android.widget.ListView;
 import android.widget.TextView;
 
@@ -55,7 +56,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     private String provider;
     private SharedPreferences sharedPreferences;
     private SupportMapFragment mapFragment;
-    private Boolean remember;
+    private Boolean remember, truckParking, disabledParking, motorcycleParking, paymentParking, noPaymentParking, carParking;
     private ListView mDrawerList;
     private ArrayAdapter<String> mAdapter;
     private ActionBarDrawerToggle mDrawerToggle;
@@ -64,7 +65,6 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     private HashMap<LatLng, Polyline> polyMap;
     private ArrayList<ParkingPlace> mParkingPlaces;
     private final String TAG = MapsActivity.class.getSimpleName();
-    private final int KM = 50;
 //    private ClusterManager<MyMarker> clusterManager;
 
     @TargetApi(Build.VERSION_CODES.LOLLIPOP)
@@ -78,8 +78,10 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         getSupportActionBar().setHomeButtonEnabled(true);
         mDrawerLayout = (DrawerLayout) findViewById(R.id.drawerLayout);
         mDrawerList = (ListView) findViewById(R.id.navList);
-        sharedPreferences = getSharedPreferences("PBuddy_Storage", Context.MODE_PRIVATE);
-        remember = sharedPreferences.getBoolean("PBuddy_SavedPreferences", true);
+        sharedPreferences = getSharedPreferences(CityChooserFragment.PBuddySharedPrefs, Context.MODE_PRIVATE);
+        remember = sharedPreferences.getBoolean(CityChooserFragment.RememberCity, true);
+        CheckBox checkbox;
+        checkbox = (CheckBox) findViewById(R.id.mc_checkbox);
 //        http://openparking.stockholm.se/LTF-Tolken/v1/ptillaten/all?apiKey=0d49d540-8c75-4a01-b8c7-ad221c4708ba
 //        if (remember) {
 //            Log.i(TAG,"SAVED");
@@ -115,7 +117,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         mDrawerList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                switch(position) {
+                switch (position) {
                     case 0:
                         Log.i(TAG, "position 0");
                         mDrawerLayout.closeDrawers();
@@ -135,7 +137,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                         break;
                     case 4:
                         Log.i(TAG, "position 4");
-                        getSupportFragmentManager().beginTransaction().add(R.id.map, new SettingsFragment()).commit();
+                        getSupportFragmentManager().beginTransaction().add(R.id.map, new SettingsFragment()).addToBackStack(null).commit();
                         mDrawerLayout.closeDrawers();
                         break;
                 }
@@ -189,27 +191,56 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     }
 
     // Will show or hide marker depending on distance.
-    private void showMarkers() {
+    private void filterMarkers() {
         LatLngBounds bounds = mMap.getProjection().getVisibleRegion().latLngBounds;
         LatLng marker;
+        carParking = sharedPreferences.getBoolean(SettingsFragment.CarCheckboxStatus, true);
+        truckParking = sharedPreferences.getBoolean(SettingsFragment.TruckCheckboxStatus, false);
+        disabledParking = sharedPreferences.getBoolean(SettingsFragment.DisabledCheckboxStatus, false);
+        motorcycleParking = sharedPreferences.getBoolean(SettingsFragment.MCCheckboxStatus, false);
+        paymentParking = sharedPreferences.getBoolean(SettingsFragment.PaymentCheckboxStatus,true);
+        noPaymentParking = sharedPreferences.getBoolean(SettingsFragment.NoPaymentCheckboxStatus, true);
         for (ParkingPlace place : mParkingPlaces) {
-            // Use filter here. or before we end up here.
-            // E.g: If we have "lastbil" unchecked and marker is a place for "lastbil".
-            // Then do nothing.
-            // else do thing below.
-            // repeat for other types dependeing on their checkbox status.
-            marker = place.getGeometry().convertToLatLng().get(0);
-            if (bounds.contains(marker) && markerMap.containsKey(marker) && !markerMap.get(marker).isVisible()) {
-                markerMap.get(marker).setVisible(true);
-            } else if (bounds.contains(marker) && !markerMap.containsKey(marker)) {
-                markerMap.put(marker, mMap.addMarker(new MarkerOptions().position(marker).icon(BitmapDescriptorFactory.fromResource(R.drawable.parkmarker))));
-                polyMap.put(marker, mMap.addPolyline(new PolylineOptions().color(getResources().getColor(R.color.colorPrimary)).width(10).addAll(place.getGeometry().convertToLatLng())));
-            } else if(!bounds.contains(marker) && markerMap.containsKey(marker)) {
-                markerMap.get(marker).remove();
-                markerMap.remove(marker);
-                polyMap.get(marker).remove();
-                polyMap.remove(marker);
+
+            if (carParking && place.getProperties().getTypeOfParkingPlace() != null && place.getProperties().getTypeOfParkingPlace().equalsIgnoreCase("fordon")){
+                showMarkers(bounds, place);
             }
+
+            if (truckParking && place.getProperties().getTypeOfParkingPlace() != null && place.getProperties().getTypeOfParkingPlace().equalsIgnoreCase("tung lastbil")){
+                showMarkers(bounds, place);
+            }
+
+            if (disabledParking && place.getProperties().getTypeOfParkingPlace() != null && place.getProperties().getTypeOfParkingPlace().equalsIgnoreCase("rörelsehindrade")){
+                showMarkers(bounds, place);
+            }
+
+            if (motorcycleParking && place.getProperties().getTypeOfParkingPlace() != null && place.getProperties().getTypeOfParkingPlace().equalsIgnoreCase("motorcykel")){
+                    showMarkers(bounds, place);
+            }
+
+            if (paymentParking && place.getProperties().getParkingType() != null && place.getProperties().getParkingType().contentEquals("P-avgift endast besök")&& place.getProperties().getParkingType().contentEquals("P Avgift, boende")){
+                showMarkers(bounds, place);
+            }
+
+            if (noPaymentParking && place.getProperties().getParkingType() != null && place.getProperties().getParkingType().contentEquals("Avgiftsfri parkering")){
+                    showMarkers(bounds, place);
+            }
+        }
+    }
+
+    private void showMarkers(LatLngBounds bounds, ParkingPlace place) {
+        LatLng marker;
+        marker = place.getGeometry().convertToLatLng().get(0);
+        if (bounds.contains(marker) && markerMap.containsKey(marker) && !markerMap.get(marker).isVisible()) {
+            markerMap.get(marker).setVisible(true);
+        } else if (bounds.contains(marker) && !markerMap.containsKey(marker)) {
+            markerMap.put(marker, mMap.addMarker(new MarkerOptions().position(marker).icon(BitmapDescriptorFactory.fromResource(R.drawable.parkmarker))));
+            polyMap.put(marker, mMap.addPolyline(new PolylineOptions().color(getResources().getColor(R.color.colorPrimary)).width(10).addAll(place.getGeometry().convertToLatLng())));
+        } else if(!bounds.contains(marker) && markerMap.containsKey(marker)) {
+            markerMap.get(marker).remove();
+            markerMap.remove(marker);
+            polyMap.get(marker).remove();
+            polyMap.remove(marker);
         }
     }
 
@@ -223,7 +254,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         LatLng myLocationAsLatLng = new LatLng(location.getLatitude(), location.getLongitude());
         mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(myLocationAsLatLng, 18));
         if (mParkingPlaces != null) {
-            showMarkers();
+            filterMarkers();
         }
     }
 
@@ -267,7 +298,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         // Show partially if zoomed in. Check for mMarkerMap since it can be null.
         // Could prob initialize hashMap earlier ot avoid.
         if (mParkingPlaces != null && mParkingPlaces.size() > 100) {
-            showMarkers();
+            filterMarkers();
         }
 //        else if (viableMarkerPositions != null && cameraPosition.zoom < 12) {
             // We really don't need to hide markers when zoomed out to far. Looks ridonculous when moving, so instead we show all.

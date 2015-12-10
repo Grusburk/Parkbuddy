@@ -23,8 +23,11 @@ public class CityChooserFragment extends Fragment {
     private final String TAG = CityChooserFragment.class.getSimpleName();
     private SharedPreferences sharedPreferences;
     private SharedPreferences.Editor editor;
+    public static final String PBuddySharedPrefs = "PBuddySharedPerfs";
+    public static final String RememberCity = "rememberCity";
 
     public CityChooserFragment() {
+
         // Required empty public constructor
     }
 
@@ -64,9 +67,9 @@ public class CityChooserFragment extends Fragment {
             public void onClick(View v) {
                 onCitySelectedListener.onCitySelected(2);
                 if (checkboxRemember.isChecked()) {
-                    sharedPreferences = CityChooserFragment.this.getActivity().getSharedPreferences("PBuddy_Storage", Context.MODE_PRIVATE);
+                    sharedPreferences = CityChooserFragment.this.getActivity().getSharedPreferences(PBuddySharedPrefs, Context.MODE_PRIVATE);
                     editor = sharedPreferences.edit();
-                    editor.putBoolean("PBuddy_SavedPreferences", checkboxRemember.isChecked());
+                    editor.putBoolean(RememberCity, checkboxRemember.isChecked());
                     editor.apply();
                 }
             }

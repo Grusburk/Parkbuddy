@@ -26,17 +26,14 @@
         android:textAlignment="center"
         android:textSize="18sp"/>
     <CheckBox
-        android:checked="true"
-
         android:textColor="@android:color/white"
         android:textSize="20sp"
         android:text="Parkering för personbil"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:id="@+id/car_checkbox"/>
-    <CheckBox
-        android:checked="true"
 
+    <CheckBox
         android:textColor="@android:color/white"
         android:textSize="20sp"
         android:text="Parkering för rörelsehindrad"
@@ -44,8 +41,6 @@
         android:layout_height="wrap_content"
         android:id="@+id/rorelse_checkbox"/>
     <CheckBox
-        android:checked="true"
-
         android:textColor="@android:color/white"
         android:textSize="20sp"
         android:text="Parkering för lastbil"
@@ -53,8 +48,6 @@
         android:layout_height="wrap_content"
         android:id="@+id/lastbil_checkbox"/>
     <CheckBox
-        android:checked="true"
-
         android:textColor="@android:color/white"
         android:textSize="20sp"
         android:text="Parkering för MC"
@@ -62,12 +55,17 @@
         android:layout_height="wrap_content"
         android:id="@+id/mc_checkbox"/>
     <CheckBox
-        android:checked="true"
-
         android:textColor="@android:color/white"
         android:textSize="20sp"
-        android:text="Parkering som kostar"
+        android:text="Parkering med avgift"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:id="@+id/payment_checkbox"/>
+    <CheckBox
+        android:textColor="@android:color/white"
+        android:textSize="20sp"
+        android:text="Parkering utan avgift"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/nopayment_checkbox"/>
 </LinearLayout>
