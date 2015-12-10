@@ -5,7 +5,6 @@ import android.annotation.TargetApi;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
-import android.graphics.Color;
 import android.location.Criteria;
 import android.location.Location;
 import android.location.LocationListener;
@@ -18,7 +17,6 @@ import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
-import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
@@ -195,6 +193,11 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         LatLngBounds bounds = mMap.getProjection().getVisibleRegion().latLngBounds;
         LatLng marker;
         for (ParkingPlace place : mParkingPlaces) {
+            // Use filter here. or before we end up here.
+            // E.g: If we have "lastbil" unchecked and marker is a place for "lastbil".
+            // Then do nothing.
+            // else do thing below.
+            // repeat for other types dependeing on their checkbox status.
             marker = place.getGeometry().convertToLatLng().get(0);
             if (bounds.contains(marker) && markerMap.containsKey(marker) && !markerMap.get(marker).isVisible()) {
                 markerMap.get(marker).setVisible(true);

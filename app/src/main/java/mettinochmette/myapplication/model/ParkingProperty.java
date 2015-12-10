@@ -42,10 +42,20 @@ public class ParkingProperty {
     private String parkingDistrict;
     @SerializedName("ADDRESS")
     private String address;
+    @SerializedName("VF_PLATS_TYP")
+    private String typeOfParkingPlace;
     @SerializedName("bbox")
     private ArrayList<Float> mapBoxCoordinates;
     private ArrayList<LatLng> boxCoordinatesLatLng;
     private LatLng latLngs;
+
+    /**
+     * Used to filter out parking places depending on type.
+     * @return the type of parking as a String e.g: Reserverad p-plats rörelsehindrad, Reserverad p-plats lastbil.
+     */
+    public String getTypeOfParkingPlace() {
+        return typeOfParkingPlace;
+    }
 
     public int getFeatureObjectId() {
         return featureObjectId;
